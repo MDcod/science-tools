@@ -10,7 +10,7 @@ app = FastAPI()
 # Настройки CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://mdcod.github.io/"],  # Разрешить запросы с любых доменов (можно указать конкретные)
+    allow_origins=["*"],  # Разрешить запросы с любых доменов (можно указать конкретные)
     allow_credentials=True,
     allow_methods=["*"],  # Разрешить все методы (GET, POST и т.д.)
     allow_headers=["*"],  # Разрешить все заголовки
