@@ -6,6 +6,15 @@ from typing import List
 
 app = FastAPI()
 
+# Настройки CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://mdcod.github.io/"],  # Разрешить запросы с любых доменов (можно указать конкретные)
+    allow_credentials=True,
+    allow_methods=["*"],  # Разрешить все методы (GET, POST и т.д.)
+    allow_headers=["*"],  # Разрешить все заголовки
+)
+
 # Функция модели Бертотти для подгонки
 def bertotti_model(x, kh, kc, ke):
     f, Bm, d, rho = x
