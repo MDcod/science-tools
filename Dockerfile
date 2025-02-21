@@ -7,13 +7,11 @@ RUN apt-get update && apt-get install -y \
     libatlas-base-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Устанавливаем необходимые Python библиотеки
-COPY requirements.txt /app/requirements.txt
 WORKDIR /app
-RUN pip install --no-cache-dir -r requirements.txt
-
 # Копируем код приложения в контейнер
-COPY ./server.py /app
+COPY . /app
+# Устанавливаем необходимые Python библиотеки
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Открываем порт 8000 для приложения
 EXPOSE 8000
