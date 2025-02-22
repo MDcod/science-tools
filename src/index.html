@@ -3,17 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Модель Бертотти</title>
+    <title>Инструменты Института Физики Металлов</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #0d1117; color: #c9d1d9; max-width: 600px; margin: auto; padding: 20px; }
-        input, button, textarea { display: block; width: 100%; margin-bottom: 10px; padding: 8px; background-color: #161b22; color: #c9d1d9; border: 1px solid #30363d; }
-        button { background-color: #238636; border: none; cursor: pointer; width: 100%; }
+        .form-group { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .form-group:hover, .form-group:focus-within { background-color: #1e2531; }
+        label { flex: 1; white-space: nowrap; text-align: left; margin-right: 10px; }
+        input, button, textarea { flex: 2; padding: 8px; background-color: #161b22; color: #c9d1d9; border: 1px solid #30363d; width: 100%; }
+        input { max-width: 100px; }
+        textarea { width: calc(100% - 18px); height: 9em; }
+        button { background-color: #238636; border: none; cursor: pointer; }
         button:hover { background-color: #2ea043; }
         .tab { cursor: pointer; padding: 10px; display: inline-block; background-color: #161b22; margin-right: 5px; }
         .tab:hover { background-color: #238636; }
         .tab.active { background-color: #2ea043; }
         .content { display: none; }
         .content.active { display: block; }
+        pre { max-width: 100%; overflow-x: auto; word-wrap: break-word; white-space: pre-wrap; background-color: #161b22; padding: 10px; border-radius: 5px; border: 1px solid #30363d; }
     </style>
 </head>
 <body>
@@ -25,13 +31,13 @@
     <div id="losses" class="content">
         <h2>Расчет потерь по модели Бертотти</h2>
         <form id="lossesForm">
-            <input type="number" step="any" name="f" value="50" placeholder="Частота (Гц)" required>
-            <input type="number" step="any" name="Bm" value="1.5" placeholder="Макс. индукция (Тл)" required>
-            <input type="number" step="any" name="kh" value="0.02" placeholder="Коэф. гистерезиса" required>
-            <input type="number" step="any" name="kc" value="0.0001" placeholder="Коэф. вихревых потерь" required>
-            <input type="number" step="any" name="ke" value="0.001" placeholder="Коэф. аномальных потерь" required>
-            <input type="number" step="any" name="d" value="0.0003" placeholder="Толщина листа (м)" required>
-            <input type="number" step="any" name="rho" value="4.7e-7" placeholder="Удельное сопротивление (Ом·м)" required>
+            <div class="form-group"><label for="f">Частота (Гц):</label><input id="f" type="number" step="any" name="f" value="50" required></div>
+            <div class="form-group"><label for="Bm">Макс. индукция (Тл):</label><input id="Bm" type="number" step="any" name="Bm" value="1.5" required></div>
+            <div class="form-group"><label for="kh">Коэф. гистерезиса:</label><input id="kh" type="number" step="any" name="kh" value="0.02" required></div>
+            <div class="form-group"><label for="kc">Коэф. вихревых потерь:</label><input id="kc" type="number" step="any" name="kc" value="0.0001" required></div>
+            <div class="form-group"><label for="ke">Коэф. аномальных потерь:</label><input id="ke" type="number" step="any" name="ke" value="0.001" required></div>
+            <div class="form-group"><label for="d">Толщина листа (м):</label><input id="d" type="number" step="any" name="d" value="0.0003" required></div>
+            <div class="form-group"><label for="rho">Удельное сопротивление (Ом·м):</label><input id="rho" type="number" step="any" name="rho" value="4.7e-7" required></div>
             <button type="submit">Рассчитать</button>
         </form>
         <pre id="result"></pre>
@@ -40,7 +46,7 @@
     <div id="fit" class="content">
         <h2>Определение коэффициентов</h2>
         <form id="fitForm">
-            <textarea name="data" required style="height: 9em;"># Пример:
+            <textarea name="data" required># Пример:
 50 1.5 0.0003 4.7e-7 0.05
 100 1.0 0.0003 4.7e-7 0.03</textarea>
             <button type="submit">Подогнать коэффициенты</button>
@@ -70,41 +76,43 @@
             let formData = new FormData(event.target);
             let data = Object.fromEntries(formData);
             for (let key in data) data[key] = parseFloat(data[key]);
-            let response = await fetch('/calculate_losses', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            let result = await response.json();
-            if (!response.ok) {
-                document.getElementById('fitResult').innerText = JSON.stringify(result, null, 2);
-            }
-            else {
-                document.getElementById('result').innerText = `Гистерезисные потери (Ph): ${result.Ph.toFixed(4)} Вт/кг\n` +
+            try {
+                let response = await fetch("/calculate_losses", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                let result = await response.json();
+                document.getElementById("result").innerText = response.ok 
+                    ? `Гистерезисные потери (Ph): ${result.Ph.toFixed(4)} Вт/кг\n` +
                     `Вихревые потери (Pc): ${result.Pc.toFixed(4)} Вт/кг\n` +
                     `Аномальные потери (Pa): ${result.Pa.toFixed(4)} Вт/кг\n` +
-                    `Общие потери (P_total): ${result.P_total.toFixed(4)} Вт/кг`;
+                    `Общие потери (P_total): ${result.P_total.toFixed(4)} Вт/кг` 
+                    : JSON.stringify(result, null, 2);
+            } catch (error) {
+                document.getElementById("result").innerText = `Ошибка запроса: ${error.message}`;
             }
-        };
 
+        }
         document.getElementById('fitForm').onsubmit = async function(event) {
             event.preventDefault();
             let dataText = event.target.data.value.trim();
             let dataArray = dataText.split('\n').map(line => line.split(' ').map(Number));
-            let response = await fetch('/fit_coefficients', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ data: dataArray })
-            });
-            let result = await response.json();
-            if (!response.ok) {
-                document.getElementById('fitResult').innerText = JSON.stringify(result, null, 2);
-            }
-            else {
-                document.getElementById('fitResult').innerText = `Подогнанные коэффициенты:\n` +
-                `kh = ${result.kh.toFixed(6)}\n` +
-                `kc = ${result.kc.toFixed(6)}\n` +
-                `ke = ${result.ke.toFixed(6)}`;
+            try {
+                let response = await fetch('/fit_coefficients', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: dataArray })
+                });
+                let result = await response.json();
+                document.getElementById('fitResult').innerText = response.ok 
+                    ? `Подогнанные коэффициенты:\n` +
+                    `kh = ${result.kh.toFixed(6)}\n` +
+                    `kc = ${result.kc.toFixed(6)}\n` +
+                    `ke = ${result.ke.toFixed(6)}` 
+                    : JSON.stringify(result, null, 2);
+            } catch (error) {
+                document.getElementById('fitResult').innerText = `Ошибка запроса: ${error.message}`;
             }
         };
     </script>
