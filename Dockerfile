@@ -8,10 +8,12 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-# Копируем код приложения в контейнер
-COPY . /app
 # Устанавливаем необходимые Python библиотеки
+COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Копируем код приложения в контейнер
+COPY ./src /app
 
 # Открываем порт 8000 для приложения
 EXPOSE 8000

@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+import os
 from pydantic import BaseModel
 import numpy as np
 from scipy.optimize import curve_fit
@@ -10,11 +12,15 @@ app = FastAPI()
 # Настройки CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Разрешить запросы с любых доменов (можно указать конкретные)
     allow_credentials=True,
     allow_methods=["*"],  # Разрешить все методы (GET, POST и т.д.)
     allow_headers=["*"],  # Разрешить все заголовки
 )
+
+@app.get("/")
+def serve_index():
+    file_path = os.path.join(os.path.dirname(__file__), "index.html")
+    return FileResponse(file_path, media_type="text/html")
 
 # Функция модели Бертотти для подгонки
 def bertotti_model(x, kh, kc, ke):
