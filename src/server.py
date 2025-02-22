@@ -22,6 +22,11 @@ def serve_index():
     file_path = os.path.join(os.path.dirname(__file__), "index.html")
     return FileResponse(file_path, media_type="text/html")
 
+@app.get("/robots.txt")
+def serve_robots():
+    file_path = os.path.join(os.path.dirname(__file__), "robots.txt")
+    return FileResponse(file_path, media_type="text/plain")
+
 # Функция модели Бертотти для подгонки
 def bertotti_model(x, kh, kc, ke):
     f, Bm, d, rho = x
